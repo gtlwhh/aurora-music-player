@@ -1,0 +1,35 @@
+# ============ 凭证与私有数据（绝不能上传） ============
+data/
+.auth-state/
+*.cookie
+*.session
+accounts.json
+dynamic-sessions.json
+settings.json
+
+# ============ 依赖与构建产物 ============
+node_modules/
+dist/
+build/tmp/
+*.exe
+*.blockmap
+*.apk
+
+# ============ 移动端（独立仓库管理，不随桌面端上传） ============
+mobile/
+
+# ============ 历史云 BFF 与临时文件 ============
+bff/
+cf-worker/
+deploy/
+demo/
+logs/
+shots/
+_fix*.mjs
+*.log
+
+# ============ IDE 与系统 ============
+.idea/
+.vscode/
+Thumbs.db
+.DS_Store

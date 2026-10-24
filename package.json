@@ -1,0 +1,69 @@
+{
+  "name": "aurora-music-player",
+  "version": "1.8.3",
+  "description": "极光音乐 - 3D 封面 / 拼图切歌 / 律动光效 / 网易云+QQ 双平台",
+  "main": "electron/main.js",
+  "type": "commonjs",
+  "scripts": {
+    "start": "electron .",
+    "serve": "node server/index.js",
+    "gen:demo": "node tools/gen-demo.js && node tools/gen-covers.js",
+    "check": "node tools/e2e-check.js",
+    "dist": "electron-builder --win"
+  },
+  "keywords": [
+    "music",
+    "player",
+    "3d",
+    "netease",
+    "electron"
+  ],
+  "license": "MIT",
+  "dependencies": {
+    "@yakult-green-tea/qq-music-api": "^3.3.4",
+    "NeteaseCloudMusicApi": "^4.32.0",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "electron": "^44.9.2",
+    "electron-builder": "^26.15.3",
+    "puppeteer-core": "^25.15.0"
+  },
+  "productName": "极光音乐",
+  "build": {
+    "appId": "com.jiguang.music",
+    "productName": "极光音乐",
+    "directories": {
+      "output": "dist",
+      "buildResources": "build"
+    },
+    "files": [
+      "web/**/*",
+      "core/**/*",
+      "server/**/*",
+      "electron/**/*",
+      "package.json"
+    ],
+    "asar": true,
+    "win": {
+      "icon": "build/icon.ico",
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "极光音乐",
+      "artifactName": "极光音乐-Setup-${version}.${ext}"
+    }
+  }
+}

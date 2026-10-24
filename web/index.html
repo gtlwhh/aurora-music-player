@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>极光音乐</title>
+<link rel="stylesheet" href="/css/style.css">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🎵</text></svg>">
+<script type="importmap">
+{
+  "imports": {
+    "three": "/vendor/three/build/three.module.js"
+  }
+}
+</script>
+</head>
+<body>
+
+<!-- ============ 动态背景 ============ -->
+<div class="bg-root">
+  <div class="bg-blur" id="bgBlur"></div>
+  <div class="bg-aurora" id="bgAurora">
+    <span class="blob b1"></span>
+    <span class="blob b2"></span>
+    <span class="blob b3"></span>
+  </div>
+  <div class="bg-grain"></div>
+  <div class="bg-vignette"></div>
+</div>
+
+<div id="app">
+
+  <!-- ============ 左侧导航（网易云式） ============ -->
+  <nav id="sidenav">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M4 18V9M9 18V5M14 18v-7M19 18v-4"/>
+        </svg>
+      </div>
+      <b class="side-brand">AURORA</b>
+    </div>
+    <button class="side-item active dtab" data-tab="results">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>
+      <span>搜索</span>
+    </button>
+    <button class="side-item dtab" data-tab="library">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 7h18M3 12h18M3 17h12"/></svg>
+      <span>本地音乐</span>
+    </button>
+    <button class="side-item dtab" data-tab="playlists">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M3 6h13M3 12h13M3 18h8"/><circle cx="18" cy="16" r="3"/><path d="M21 16V8l-3 1"/></svg>
+      <span>我的歌单</span>
+    </button>
+    <button class="side-item dtab" data-tab="queue">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/><path d="M18 16v5l4-2.5z"/></svg>
+      <span>播放队列</span>
+    </button>
+    <div class="side-sep"></div>
+    <button class="side-item" id="sideHeartMode" title="基于当前歌曲，双平台混合推荐">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 21s-7-4.6-9.3-8.4C.9 9.6 2.4 6 5.8 6c2 0 3.3 1 4.2 2.4h4C15 7 16.2 6 18.2 6c3.4 0 4.9 3.6 3.1 6.6C19 16.4 12 21 12 21z"/></svg>
+      <span>心动模式</span>
+    </button>
+    <button class="side-item" id="sidePersonalFm" title="双平台混合漫游推荐">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="2"/><path d="M7.8 16.2a6 6 0 0 1 0-8.4M16.2 7.8a6 6 0 0 1 0 8.4M5 19a10 10 0 0 1 0-14M19 5a10 10 0 0 1 0 14"/></svg>
+      <span>私人漫游</span>
+    </button>
+  </nav>
+
+  <div id="maincol">
+
+  <!-- ============ 顶栏 ============ -->
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <path d="M4 18V9M9 18V5M14 18v-7M19 18v-4"/>
+        </svg>
+      </div>
+      <div class="brand-text">
+        <b>AURORA</b>
+        <small>极光音乐</small>
+      </div>
+    </div>
+
+    <div class="search-wrap">
+      <svg class="search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>
+      </svg>
+      <input id="searchInput" type="text" placeholder="搜索歌曲、歌手（网易云 + QQ 音乐聚合）" autocomplete="off" spellcheck="false">
+    </div>
+
+    <!-- 动态队列状态灯：只在心动/漫游进行中显示，退出即隐藏，不占布局 -->
+    <div class="dyn-chip" id="dynamicState"></div>
+
+    <div class="top-actions">
+      <button class="icon-btn" id="btnGlow" title="律动光效开关">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <circle cx="12" cy="12" r="4"/>
+          <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>
+        </svg>
+        <span class="badge-dot"></span>
+      </button>
+      <button class="icon-btn" id="btnSettings" title="设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 1 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.6 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 1 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.6a1.65 1.65 0 0 0 1-1.51V3a2 2 0 1 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 1 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
+      <button class="icon-btn" id="btnPlaylist" title="播放列表">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round">
+          <path d="M3 6h12M3 12h12M3 18h8"/><path d="M19 10v8"/><circle cx="17" cy="19" r="2"/>
+        </svg>
+      </button>
+
+      <!-- 桌面窗口按钮（仅在 Electron 下显示） -->
+      <div class="win-controls" id="winControls" hidden>
+        <button class="win-btn" id="winMin" title="最小化">
+          <svg viewBox="0 0 12 12"><path d="M2.5 6h7" stroke="currentColor" stroke-width="1.1"/></svg>
+        </button>
+        <button class="win-btn" id="winMax" title="最大化">
+          <svg class="ic-max" viewBox="0 0 12 12"><rect x="2.6" y="2.6" width="6.8" height="6.8" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>
+          <svg class="ic-restore" viewBox="0 0 12 12"><rect x="2" y="4" width="5.6" height="5.6" fill="none" stroke="currentColor" stroke-width="1.1"/><path d="M4.2 4V2.4h5.4v5.4H8" fill="none" stroke="currentColor" stroke-width="1.1"/></svg>
+        </button>
+        <button class="win-btn close" id="winClose" title="关闭">
+          <svg viewBox="0 0 12 12"><path d="M3 3l6 6M9 3l-6 6" stroke="currentColor" stroke-width="1.1"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============ 主舞台 ============ -->
+  <div id="mainView">
+    <!-- 浏览页（搜索/本地音乐/我的歌单，全宽接管主区域） -->
+    <section id="browsePane" hidden></section>
+    <!-- 播放页（3D 封面 + 歌词） -->
+    <main class="stage" id="stagePane">
+
+    <!-- 左：3D 封面 -->
+    <section class="visual-pane">
+      <div class="canvas-holder" id="canvasHolder">
+        <canvas id="coverCanvas"></canvas>
+        <div class="drag-hint" id="dragHint">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M8 3 4 7l4 4M16 3l4 4-4 4"/><path d="M4 7h16"/><path d="M12 21v-8"/>
+          </svg>
+          <span>拖动可任意转动封面</span>
+        </div>
+        <div class="trial-badge" id="trialBadge" hidden>试听片段</div>
+      </div>
+
+      <div class="track-meta">
+        <h1 id="trackTitle">未在播放</h1>
+        <p id="trackArtist">请选择一首歌曲</p>
+        <div class="meta-tags" id="metaTags"></div>
+      </div>
+    </section>
+
+    <!-- 右：歌词 -->
+    <aside class="lyric-pane">
+      <div class="lyric-head">
+        <span class="lyric-label">歌词</span>
+        <span class="lyric-source" id="lyricSource"></span>
+      </div>
+      <div class="lyric-scroll" id="lyricScroll">
+        <div class="lyric-inner" id="lyricInner">
+          <div class="lyric-empty" id="lyricEmpty">
+            <div class="vinyl-spin">
+              <svg viewBox="0 0 100 100">
+                <circle cx="50" cy="50" r="46" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".35"/>
+                <circle cx="50" cy="50" r="30" fill="none" stroke="currentColor" stroke-width="1" opacity=".25"/>
+                <circle cx="50" cy="50" r="12" fill="none" stroke="currentColor" stroke-width="1.5" opacity=".5"/>
+                <circle cx="50" cy="50" r="3.5" fill="currentColor" opacity=".7"/>
+              </svg>
+            </div>
+            <p>还没有歌词<br><small>选择一首歌，歌词会在这里同步滚动</small></p>
+          </div>
+        </div>
+      </div>
+      <div class="lyric-fade top"></div>
+      <div class="lyric-fade bottom"></div>
+      <!-- 像素伴侣：跟着音乐唱歌的小人 -->
+      <div id="buddyHost" title="像素伴侣"></div>
+    </aside>
+  </main>
+  </div><!-- /mainView -->
+
+  <!-- ============ 播放条 ============ -->
+  <footer class="playerbar">
+    <div class="pb-left">
+      <div class="mini-cover" id="miniCover">
+        <span>♪</span>
+      </div>
+      <div class="mini-info">
+        <b id="miniTitle">—</b>
+        <small id="miniArtist">—</small>
+      </div>
+    </div>
+
+    <div class="pb-center">
+      <div class="controls">
+        <button class="ctl" id="btnShuffle" title="随机播放">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M16 3h5v5"/><path d="M4 20 21 3"/><path d="M21 16v5h-5"/><path d="M15 15l6 6"/><path d="M4 4l5 5"/>
+          </svg>
+        </button>
+        <button class="ctl" id="btnPrev" title="上一首">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 5h2v14H6zM20 5v14L9 12z"/></svg>
+        </button>
+        <button class="ctl ctl-main" id="btnPlay" title="播放/暂停">
+          <svg class="ic-play" viewBox="0 0 24 24" fill="currentColor"><path d="M8 4.5v15L20 12z"/></svg>
+          <svg class="ic-pause" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4h3.5v16H7zM13.5 4H17v16h-3.5z"/></svg>
+          <span class="loading-ring" hidden></span>
+        </button>
+        <button class="ctl" id="btnNext" title="下一首">
+          <svg viewBox="0 0 24 24" fill="currentColor"><path d="M16 5h2v14h-2zM4 5v14l11-7z"/></svg>
+        </button>
+        <button class="ctl" id="btnRepeat" title="循环模式">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M17 2l4 4-4 4"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><path d="M7 22l-4-4 4-4"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/>
+          </svg>
+          <span class="mode-one">1</span>
+        </button>
+      </div>
+
+      <div class="prog-row">
+        <span class="time" id="timeNow">0:00</span>
+        <div class="progress" id="progressBar">
+          <div class="mood-track">
+            <canvas class="mood-canvas" id="moodCanvas"></canvas>
+            <div class="mood-progress" id="moodProgress"></div>
+          </div>
+          <span class="mood-tag" id="moodTag"></span>
+          <div class="progress-bg"></div>
+          <div class="progress-buffer" id="progBuffer"></div>
+          <div class="progress-fill" id="progFill"><i class="knob"></i></div>
+        </div>
+        <span class="time" id="timeTotal">0:00</span>
+      </div>
+    </div>
+
+    <div class="pb-right">
+      <button class="ctl small" id="btnMute" title="静音">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M11 5 6 9H2v6h4l5 4z"/><path class="vol-wave w1" d="M15.5 8.5a5 5 0 0 1 0 7"/><path class="vol-wave w2" d="M18.5 5.5a9 9 0 0 1 0 13"/>
+          <path class="vol-x" d="m16 9 5 6M21 9l-5 6" style="display:none"/>
+        </svg>
+      </button>
+      <div class="volume" id="volumeBar">
+        <div class="vol-bg"></div>
+        <div class="vol-fill" id="volFill"></div>
+      </div>
+    </div>
+  </footer>
+  </div><!-- /maincol -->
+
+  <!-- ============ 右侧内容栏（常驻：队列 / 搜索 / 曲库 / 歌单） ============ -->
+  <!-- ============ 右侧抽屉：只装列表（队列 / 歌单详情），可收起 ============ -->
+  <aside class="drawer" id="drawer">
+    <div class="drawer-head">
+      <b id="drawerTitle">播放队列</b>
+      <button class="icon-btn sm" id="btnDrawerClose" title="收起">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body" id="drawerBody"></div>
+    <div class="drawer-foot" id="drawerFoot"></div>
+  </aside>
+
+<!-- ============ 设置弹窗 ============ -->
+<div class="modal-mask" id="modalMask">
+  <div class="modal" id="modal">
+    <div class="modal-head">
+      <h2>设置</h2>
+      <button class="icon-btn sm" id="btnModalClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body">
+
+      <section class="set-group">
+        <h3>本地音乐库</h3>
+        <p class="set-desc">添加你存放音乐文件的文件夹。任何音乐软件（网易云、QQ 音乐、酷狗…）的下载目录都可以直接使用，播放器读取原始文件，音质不做任何压缩。</p>
+        <div class="dir-list" id="dirList"></div>
+        <button class="btn ghost" id="btnAddDir">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+          添加文件夹
+        </button>
+      </section>
+
+      <section class="set-group">
+        <h3>在线音源</h3>
+        <p class="set-desc">播放器<b>已内置网易云音源服务</b>，无需额外部署，打开即可搜索、播放。若你已有自己部署的 API 服务，可在下面填写地址覆盖内置服务。</p>
+        <label class="field">
+          <span>自定义 API 地址（可选）</span>
+          <input type="text" id="setNeteaseUrl" placeholder="留空 = 使用内置音源服务" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>登录 Cookie（可选，扫码登录后自动填充）</span>
+          <input type="text" id="setNeteaseCookie" placeholder="MUSIC_U=... 留空则使用游客身份" autocomplete="off">
+        </label>
+        <label class="field">
+          <span>音质档位</span>
+          <select id="setNeteaseLevel">
+            <option value="standard">标准 128k</option>
+            <option value="higher">较高 192k</option>
+            <option value="exhigh">极高 320k</option>
+            <option value="lossless">无损 FLAC</option>
+            <option value="hires">Hi-Res</option>
+          </select>
+        </label>
+        <div class="net-status" id="netStatus"></div>
+
+        <h3 style="margin-top:14px">账号与平台</h3>
+        <div id="accountCards"></div>
+      </section>
+
+      <section class="set-group">
+        <h3>播放</h3>
+        <label class="switch-row">
+          <span>智能过渡 (Crossfade)<small>上一首尾部与下一首交叉淡化；BPM 差异过大时自动硬切</small></span>
+          <input type="checkbox" id="setSmartCross" checked>
+          <i class="sw"></i>
+        </label>
+
+        <h3>视觉</h3>
+        <label class="switch-row">
+          <span>像素伴侣 · 唱歌小人</span>
+          <input type="checkbox" id="setBuddy" checked>
+          <i class="sw"></i>
+        </label>
+        <label class="field">
+          <span>自定义背景 <b id="bgState"></b></span>
+          <input type="file" id="setBgFile" accept="image/png,image/jpeg,image/webp">
+          <small class="field-hint">建议使用 16:9 比例（如 1920x1080）的 JPG/PNG 图片，≤25MB；自动叠加 40% 黑色遮罩保证可读性</small>
+          <button type="button" class="btn ghost btn-mini" id="btnBgClear">移除背景</button>
+        </label>
+        <label class="switch-row">
+          <span>封面律动光效</span>
+          <input type="checkbox" id="setGlow" checked>
+          <i class="sw"></i>
+        </label>
+        <label class="switch-row">
+          <span>封面上飘浮粒子</span>
+          <input type="checkbox" id="setParticles" checked>
+          <i class="sw"></i>
+        </label>
+        <label class="switch-row">
+          <span>封面自动缓慢旋转</span>
+          <input type="checkbox" id="setAutoRotate">
+          <i class="sw"></i>
+        </label>
+        <label class="switch-row">
+          <span>切歌拼图动画</span>
+          <input type="checkbox" id="setPuzzle" checked>
+          <i class="sw"></i>
+        </label>
+        <label class="switch-row">
+          <span>逐字律动<small>关闭后退回整行高亮</small></span>
+          <input type="checkbox" id="setCharFx" checked>
+          <i class="sw"></i>
+        </label>
+        <div class="field">
+          <span>歌词自动校准 <b id="calibStatus" class="calib-status">未校准</b></span>
+          <small class="field-hint">随离线分析对齐整首歌的起音点（多行投票），置信度高才自动套用</small>
+        </div>
+        <label class="field">
+          <span>当前歌曲校准 <b id="trackOffsetVal">0ms</b></span>
+          <input type="range" id="setTrackOffset" min="-500" max="500" step="10" value="0" disabled>
+          <small class="field-hint">手动覆盖优先级最高；正数提前，负数延后</small>
+          <button type="button" class="btn ghost btn-mini" id="btnClearTrackOffset">清除单曲覆盖</button>
+        </label>
+        <label class="field">
+          <span>全局校准（兜底） <b id="lyricOffsetVal">0ms</b></span>
+          <input type="range" id="setLyricOffset" min="-500" max="500" step="10" value="0">
+          <small class="field-hint">所有歌生效；被单曲覆盖与高置信自动值压过；正数提前，负数延后</small>
+        </label>
+      </section>
+
+    </div>
+    <div class="modal-foot">
+      <button class="btn ghost" id="btnResetAngle">重置封面角度</button>
+      <button class="btn primary" id="btnSaveSettings">保存设置</button>
+    </div>
+  </div>
+</div>
+
+<!-- 文件夹选择器 -->
+<div class="modal-mask" id="fsMask">
+  <div class="modal fs-modal">
+    <div class="modal-head">
+      <h2>选择音乐文件夹</h2>
+      <button class="icon-btn sm" id="btnFsClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="fs-path" id="fsPath"></div>
+    <div class="fs-body" id="fsBody"></div>
+    <div class="modal-foot">
+      <button class="btn ghost" id="btnFsUp">上一级</button>
+      <button class="btn primary" id="btnFsPick">选择当前文件夹</button>
+    </div>
+  </div>
+</div>
+
+<!-- 扫码登录（网易云 / QQ音乐） -->
+<div class="modal-mask" id="qrMask">
+  <div class="modal qr-modal">
+    <div class="modal-head">
+      <h2 id="qrTitle">扫码登录</h2>
+      <button class="icon-btn sm" id="btnQrClose">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="qr-body">
+      <div class="qr-frame">
+        <img id="qrImg" alt="登录二维码" hidden>
+        <div class="qr-loading" id="qrLoading">
+          <span class="spinner"></span>
+        </div>
+        <div class="qr-expired" id="qrExpired" hidden>
+          <span>二维码已失效</span>
+          <button class="btn ghost sm" id="btnQrRefresh">刷新</button>
+        </div>
+      </div>
+      <div class="qr-status" id="qrStatus">正在获取二维码…</div>
+      <ol class="qr-steps">
+        <li>打开手机上对应的音乐 App（网易云 / QQ / 微信）</li>
+        <li>点击右上角 <b>扫一扫</b>，扫描上方二维码</li>
+        <li>在手机上确认登录，这里会自动完成</li>
+      </ol>
+    </div>
+  </div>
+</div>
+
+<!-- 搜索联想 / 提示 -->
+<div class="toast-wrap" id="toastWrap"></div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>

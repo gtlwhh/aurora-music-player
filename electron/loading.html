@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<title>极光音乐</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: radial-gradient(120% 100% at 50% 0%, #0e1020 0%, #06070c 62%);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Microsoft YaHei", sans-serif;
+    display: grid;
+    place-items: center;
+    color: rgba(255,255,255,0.9);
+    -webkit-app-region: drag;
+    user-select: none;
+  }
+  .wrap { text-align: center; transform: translateY(-4vh); }
+  .mark {
+    width: 74px; height: 74px;
+    margin: 0 auto 26px;
+    border-radius: 21px;
+    display: grid; place-items: center;
+    background: linear-gradient(140deg, #7c6cff, #35d0ba);
+    box-shadow: 0 10px 44px -8px rgba(124,108,255,0.75);
+    animation: breathe 2.4s ease-in-out infinite;
+  }
+  .mark svg { width: 38px; height: 38px; color: #0a0a12; }
+  @keyframes breathe {
+    0%, 100% { transform: scale(1); box-shadow: 0 10px 44px -8px rgba(124,108,255,0.7); }
+    50% { transform: scale(1.055); box-shadow: 0 14px 58px -6px rgba(124,108,255,0.95); }
+  }
+  h1 {
+    font-size: 17px;
+    letter-spacing: 0.42em;
+    font-weight: 700;
+    margin-bottom: 8px;
+    background: linear-gradient(100deg, #fff, #a99dff 60%, #35d0ba);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .sub {
+    font-size: 10.5px;
+    letter-spacing: 0.3em;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 40px;
+  }
+  .bar {
+    width: 168px; height: 2px;
+    margin: 0 auto;
+    border-radius: 2px;
+    background: rgba(255,255,255,0.08);
+    overflow: hidden;
+  }
+  .bar i {
+    display: block;
+    width: 40%; height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, transparent, #7c6cff, #35d0ba, transparent);
+    animation: slide 1.35s ease-in-out infinite;
+  }
+  @keyframes slide {
+    0% { transform: translateX(-120%); }
+    100% { transform: translateX(320%); }
+  }
+  .tip {
+    margin-top: 22px;
+    font-size: 11px;
+    color: rgba(255,255,255,0.26);
+    letter-spacing: 0.06em;
+    min-height: 16px;
+  }
+  .err {
+    margin-top: 18px;
+    font-size: 11.5px;
+    line-height: 1.8;
+    color: #ff9aa5;
+    max-width: 420px;
+    -webkit-app-region: no-drag;
+    user-select: text;
+  }
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="mark">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+        <path d="M4 18V9M9 18V5M14 18v-7M19 18v-4"/>
+      </svg>
+    </div>
+    <h1>AURORA</h1>
+    <div class="sub">极光音乐</div>
+    <div class="bar"><i></i></div>
+    <div class="tip" id="tip">正在准备音乐库…</div>
+    <div class="err" id="err" hidden></div>
+  </div>
+
+<script>
+  const tips = [
+    '正在准备音乐库…',
+    '正在解析专辑封面…',
+    '正在启动音源服务…',
+    '马上就好…'
+  ];
+  let i = 0;
+  const tipEl = document.getElementById('tip');
+  const timer = setInterval(() => {
+    i = (i + 1) % tips.length;
+    tipEl.textContent = tips[i];
+  }, 1100);
+
+  if (window.auroraDesktop && window.auroraDesktop.onServerError) {
+    window.auroraDesktop.onServerError((msg) => {
+      clearInterval(timer);
+      tipEl.textContent = '启动失败';
+      const e = document.getElementById('err');
+      e.hidden = false;
+      e.textContent = msg;
+    });
+  }
+</script>
+</body>
+</html>
