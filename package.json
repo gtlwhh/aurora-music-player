@@ -1,6 +1,6 @@
 {
   "name": "aurora-music-player",
-  "version": "1.8.3",
+  "version": "1.8.4",
   "description": "极光音乐 - 3D 封面 / 拼图切歌 / 律动光效 / 网易云+QQ 双平台",
   "main": "electron/main.js",
   "type": "commonjs",
