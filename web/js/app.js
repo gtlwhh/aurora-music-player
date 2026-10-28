@@ -1381,7 +1381,13 @@ function bindUI() {
       const errs = [];
       settled.forEach((r, i) => {
         const pf = i === 0 ? 'netease' : 'qq';
-        if (r.status === 'fulfilled') merged.push(...(r.value.tracks || []));
+        if (r.status === 'fulfilled') {
+          const list = r.value.tracks || [];
+          // ★ 注入平台内原始排名：各平台接口返回顺序本身就是"热度+相关度"序，
+          //   作为跨平台可比的热度代理（QQ 侧没有 pop 字段，靠这个对齐网易云）
+          list.forEach((t, k) => { t._srcRank = k; t._srcTotal = list.length; });
+          merged.push(...list);
+        }
         else errs.push(PROVIDER_BADGE[pf] + '：' + (r.reason && r.reason.message || '失败'));
       });
       // 同平台去重 + 四档强制排序（原唱 > 歌手 > 歌名 > 伴奏/翻唱垫底），共用 core/sort.js
