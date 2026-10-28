@@ -511,7 +511,19 @@ svg { display: block; }
   font-size: 12.5px;
   opacity: 0.86;
 }
-.lyric-line.has-tr:not(.active) .tr { display: none; }
+/* 双语常显：翻译不再只跟随高亮行，非高亮行保持低调可读（修复"只显示原词"） */
+.lyric-line.has-tr:not(.active) .tr {
+  display: block;
+  font-size: 11.5px;
+  color: rgba(255, 255, 255, 0.30);
+  opacity: 1;
+  margin-top: 2px;
+  font-weight: 400;
+  filter: none;
+  text-shadow: none;
+}
+.lyric-line.has-tr.past:not(.active) .tr { color: rgba(255, 255, 255, 0.20); }
+.lyric-line.has-tr:hover:not(.active) .tr { color: rgba(255, 255, 255, 0.55); }
 
 /* 间奏标记：缩小、淡化 */
 .lyric-line.interlude {
