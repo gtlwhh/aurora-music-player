@@ -1,6 +1,6 @@
 {
   "name": "aurora-music-player",
-  "version": "1.8.4",
+  "version": "1.8.5",
   "description": "极光音乐 - 3D 封面 / 拼图切歌 / 律动光效 / 网易云+QQ 双平台",
   "main": "electron/main.js",
   "type": "commonjs",
@@ -20,7 +20,7 @@
   ],
   "license": "MIT",
   "dependencies": {
-    "@yakult-green-tea/qq-music-api": "^3.3.4",
+    "@yakult-green-tea/qq-music-api": "3.3.4",
     "NeteaseCloudMusicApi": "^4.32.0",
     "three": "^0.186.1"
   },

@@ -996,6 +996,16 @@ async function handleApi(req, res, url) {
         const clientHeld = String(req.headers['x-client-cred'] || '') === '1';
         return sendJSON(res, await accounts.startLogin(platform, { persist: !clientHeld }));
       } catch (err) {
+        // ★ QQ 扫码的内置退避（二维码过期/指纹采集失败触发，冷却仅 15~30 秒）：
+        //   把包的英文报错翻译成用户能看懂的中文，并带上重试等待时间
+        const retryMs = Number(err.retryAfterMs) || 0;
+        if (/backed off/i.test(err.message || '')) {
+          return sendError(res,
+            `QQ 登录服务冷却中（约 ${Math.ceil(retryMs / 1000) || 15} 秒），请稍候重试；若反复出现，请重启应用后重试`, 429);
+        }
+        if (/Unable to start QR login/i.test(err.message || '')) {
+          return sendError(res, 'QQ 登录服务启动失败（可能被网络风控拦截），请检查网络或稍后重试', 502);
+        }
         return sendError(res, err.message, 502);
       }
     }
